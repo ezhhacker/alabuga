@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeEntity, ThemeForm, Mission, HRUser } from '../types';
 import { useAppContext } from '../context/AppContext';
 import './AdminPage.css';
@@ -7,11 +7,13 @@ const AdminPage: React.FC = () => {
   const { user } = useAppContext();
   
   // Все хуки должны быть вызваны до любых условий
-  const [activeTab, setActiveTab] = useState<'themes' | 'missions' | 'users'>('themes');
+  const [activeTab, setActiveTab] = useState<'themes' | 'missions' | 'users' | 'analytics'>('themes');
   const [isCreatingTheme, setIsCreatingTheme] = useState(false);
   const [editingTheme, setEditingTheme] = useState<ThemeEntity | null>(null);
   const [isCreatingMission, setIsCreatingMission] = useState(false);
   const [editingMission, setEditingMission] = useState<Mission | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   
   // Моковые темы
   const [themes, setThemes] = useState<ThemeEntity[]>([
@@ -65,14 +67,24 @@ const AdminPage: React.FC = () => {
   if (!user || user.role !== 'hr') {
     return (
       <div className="access-denied">
-        <h2>Доступ запрещен</h2>
+        <h2>🚫 Доступ запрещен</h2>
         <p>Эта страница доступна только HR пользователям.</p>
         <button onClick={() => window.history.back()}>
-          Назад
+          ← Назад
         </button>
       </div>
     );
   }
+
+  // Фильтрация тем
+  const filteredThemes = themes.filter(theme => {
+    const matchesSearch = theme.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         theme.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'active' && theme.isActive) ||
+                         (filterStatus === 'inactive' && !theme.isActive);
+    return matchesSearch && matchesStatus;
+  });
 
   // Моковые данные для HR пользователя
   const currentHR: HRUser = {
@@ -109,9 +121,9 @@ const AdminPage: React.FC = () => {
   return (
     <div className="admin-page">
       <div className="admin-header">
-        <h1>🎛️ Панель администратора</h1>
+        <h1>Админ-панель</h1>
         <div className="admin-user">
-          <span className="user-avatar">👩‍💼</span>
+          <div className="user-avatar">{currentHR.name.charAt(0)}</div>
           <div className="user-info">
             <div className="user-name">{currentHR.name}</div>
             <div className="user-role">{currentHR.role.toUpperCase()}</div>
@@ -119,25 +131,33 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="admin-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'themes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('themes')}
-        >
-          🎨 Темы
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'missions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('missions')}
-        >
-          🎯 Миссии
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          👥 Пользователи
-        </button>
+      <div className="admin-nav">
+        <div className="admin-tabs">
+          <button 
+            className={`tab-button ${activeTab === 'themes' ? 'active' : ''}`}
+            onClick={() => setActiveTab('themes')}
+          >
+            🎨 Темы
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'missions' ? 'active' : ''}`}
+            onClick={() => setActiveTab('missions')}
+          >
+            🎯 Миссии
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            👥 Пользователи
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            📊 Аналитика
+          </button>
+        </div>
       </div>
 
       <div className="admin-content">
@@ -150,8 +170,44 @@ const AdminPage: React.FC = () => {
               </button>
             </div>
 
+            {/* Поиск и фильтры */}
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                placeholder="🔍 Поиск тем..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  minWidth: '200px',
+                  padding: '10px 15px',
+                  border: '1px solid #2d3748',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: '#ffffff',
+                  fontSize: '14px'
+                }}
+              />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'inactive')}
+                style={{
+                  padding: '10px 15px',
+                  border: '1px solid #2d3748',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: '#ffffff',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="all">Все темы</option>
+                <option value="active">Активные</option>
+                <option value="inactive">Неактивные</option>
+              </select>
+            </div>
+
             <div className="themes-grid">
-              {themes.map(theme => (
+              {filteredThemes.map(theme => (
                 <div key={theme.id} className={`theme-card ${theme.isActive ? 'active' : ''}`}>
                   <div className="theme-preview" style={{ background: theme.gradients.main }}>
                     <span className="theme-icon">{theme.icons.primary}</span>
@@ -238,6 +294,74 @@ const AdminPage: React.FC = () => {
             
             <div className="users-list">
               <p>Здесь будет список пользователей для управления...</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="analytics-section">
+            <div className="section-header">
+              <h2>📊 Аналитика</h2>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '25px', marginBottom: '30px' }}>
+              <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', padding: '25px', borderRadius: '12px', border: '1px solid #2d3748' }}>
+                <h3 style={{ color: '#ffd700', margin: '0 0 15px 0', fontSize: '18px' }}>👥 Пользователи</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '14px' }}>Всего пользователей:</span>
+                  <span style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold' }}>1,247</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '14px' }}>Активных сегодня:</span>
+                  <span style={{ color: '#48bb78', fontSize: '18px', fontWeight: 'bold' }}>89</span>
+                </div>
+              </div>
+
+              <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', padding: '25px', borderRadius: '12px', border: '1px solid #2d3748' }}>
+                <h3 style={{ color: '#ffd700', margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Миссии</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '14px' }}>Всего миссий:</span>
+                  <span style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold' }}>156</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '14px' }}>Завершено сегодня:</span>
+                  <span style={{ color: '#48bb78', fontSize: '18px', fontWeight: 'bold' }}>23</span>
+                </div>
+              </div>
+
+              <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', padding: '25px', borderRadius: '12px', border: '1px solid #2d3748' }}>
+                <h3 style={{ color: '#ffd700', margin: '0 0 15px 0', fontSize: '18px' }}>🎨 Темы</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '14px' }}>Всего тем:</span>
+                  <span style={{ color: '#ffffff', fontSize: '24px', fontWeight: 'bold' }}>12</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '14px' }}>Активных:</span>
+                  <span style={{ color: '#48bb78', fontSize: '18px', fontWeight: 'bold' }}>8</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', padding: '25px', borderRadius: '12px', border: '1px solid #2d3748' }}>
+              <h3 style={{ color: '#ffd700', margin: '0 0 20px 0', fontSize: '18px' }}>📈 Активность за последние 7 дней</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', height: '100px', marginBottom: '15px' }}>
+                {[65, 78, 45, 89, 92, 67, 85].map((height, index) => (
+                  <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                    <div 
+                      style={{ 
+                        width: '20px', 
+                        height: `${height}px`, 
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        borderRadius: '4px 4px 0 0',
+                        marginBottom: '8px'
+                      }}
+                    />
+                    <span style={{ color: '#a0aec0', fontSize: '12px' }}>
+                      {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][index]}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
