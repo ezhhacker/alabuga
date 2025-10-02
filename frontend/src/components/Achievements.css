@@ -1,0 +1,179 @@
+.achievements {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.achievements-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.achievements-header h3 {
+  margin: 0;
+  color: #ffd700;
+  font-size: 18px;
+}
+
+.achievements-progress {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  color: #4ecdc4;
+  border: 1px solid rgba(78, 205, 196, 0.3);
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.achievement-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.achievement-item:hover::before {
+  transform: translateX(100%);
+}
+
+.achievement-item:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.achievement-item.unlocked {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.achievement-item.locked {
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0.6;
+}
+
+.achievement-icon {
+  font-size: 32px;
+  min-width: 40px;
+  text-align: center;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+}
+
+.achievement-content {
+  flex: 1;
+}
+
+.achievement-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #a8e6cf;
+}
+
+.achievement-description {
+  font-size: 14px;
+  color: #b8c5d1;
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.achievement-date {
+  font-size: 12px;
+  color: #4ecdc4;
+  font-style: italic;
+}
+
+.achievement-rarity {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid currentColor;
+}
+
+/* Специальные эффекты для разных редкостей */
+.achievement-item[style*="legendary"] {
+  box-shadow: 0 0 20px rgba(243, 156, 18, 0.3);
+}
+
+.achievement-item[style*="epic"] {
+  box-shadow: 0 0 15px rgba(155, 89, 182, 0.2);
+}
+
+.achievement-item[style*="rare"] {
+  box-shadow: 0 0 10px rgba(78, 205, 196, 0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .achievements-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .achievement-item {
+    padding: 12px;
+  }
+  
+  .achievement-icon {
+    font-size: 28px;
+    min-width: 35px;
+  }
+  
+  .achievement-title {
+    font-size: 14px;
+  }
+  
+  .achievement-description {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .achievements-header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .achievement-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .achievement-content {
+    order: 2;
+  }
+  
+  .achievement-rarity {
+    order: 3;
+  }
+}
